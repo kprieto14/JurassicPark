@@ -213,7 +213,9 @@ namespace JurassicPark
         //If user chooses yes, this will send the dinosaur back to main for transfer
         if (confirm == "Y")
         {
-          Console.WriteLine($"{foundDinosaur.Name} will move to a different pen in a bit.");
+          var newEnclosure = PromptForInteger($"Where would you like to send {foundDinosaur.Name} to? ");
+          foundDinosaur.EnclosureNumber = newEnclosure;
+          Console.WriteLine($"{foundDinosaur.Name} has been moved to Enclosure {foundDinosaur.EnclosureNumber}.");
           return foundDinosaur;
         }
         //Otherwise if user chooses no, this method won't send anything back.
@@ -271,7 +273,7 @@ namespace JurassicPark
           },
       };
 
-      Console.WriteLine("  🦕 Welcome to my dinosaur database! 🦖");
+      Console.WriteLine("  🦕 Welcome to my dinosaur zoo! 🦖");
       Console.WriteLine("What would you like to do during your visit?");
 
       //The start of how the program will do its database thing
@@ -314,11 +316,6 @@ namespace JurassicPark
           case "T":
             //Sends list to search for a dinosaur and returns said dinosaur for transfer, then asks user where to transfer to
             foundDinosaur = TransferDinosaur("Which dinosaur do you want to transfer? ", dinosaurs);
-            
-            var newEnclosure = PromptForInteger($"Where would you like to send {foundDinosaur.Name} to? ");
-            //Adds new enclosure number to dinosaur from before.
-            foundDinosaur.EnclosureNumber = newEnclosure;
-            Console.WriteLine($"{foundDinosaur.Name} has been moved to Enclosure {foundDinosaur.EnclosureNumber}.");
             break;
 
           //Summary
