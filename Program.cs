@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using CsvHelper;
+using CsvHelper.Configuration;
 
 namespace JurassicPark
 {
@@ -23,6 +27,7 @@ namespace JurassicPark
       switch (response)
         {
           case "N":
+            //Chosen to see dinosaurs by their names.
             Console.WriteLine();
             //Sorts the dinosaurs by ABC order, then prints out list accordingly.
             var abcOrder = dinosaurs.OrderBy(dino => dino.Name);
@@ -41,6 +46,7 @@ namespace JurassicPark
             break;
 
           case "E":
+            //Chosen to view dinosaurs by enclosures.
             response = PromptForString("\nWould you like to see (A)ll dinosaurs by their Enclosure Number or see all dinosaurs in (O)ne Enclosure Number? ");
             
             if(response.ToUpper() == "A")
@@ -184,7 +190,7 @@ namespace JurassicPark
       }
       else
       {
-        Console.WriteLine("Sorry, that isn't a valid input, I'm using 0 as your answer. If this is incorrect, please remove the dinosaur and re-add them.");
+        Console.WriteLine("Sorry, that isn't a valid input, I'm using 0 as your answer. If this is incorrect, please remove the dinosaur and re-add them. With the correct information.");
         return 0;
       }
     }
@@ -377,58 +383,65 @@ namespace JurassicPark
         return null;
       }
     }
+    
+    static List<Dinosaur> LoadDinosaurs(List<Dinosaur> list)
+    {
+      var dinosaurs = list;
+      
+      //Reader process
+      if (File.Exists("dinosaurs.csv"))
+      {
+        // Creates a stream reader to get information from our file
+        TextReader reader;
+
+        // If the file exists
+        if (File.Exists("dinosaurs.csv"))
+        {
+        // Assign a StreamReader to read from the file
+        reader = new StreamReader("dinosaurs.csv");
+        }
+        else
+        {
+        // Assign a StringReader to read from an empty string
+        reader = new StringReader("");
+        }
+      
+        var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+        // Tell the reader to interpret the first row as a "header".
+        HasHeaderRecord = true,
+        };
+        
+        // Create a CSV reader to parse the stream into CSV format
+        var csvReader = new CsvReader(reader, config);
+
+        //Houses our dinosaurs from reading file
+        dinosaurs = csvReader.GetRecords<Dinosaur>().ToList();
+
+        // Close the reader
+        reader.Close();
+      }
+
+      return dinosaurs;
+    }
+
+    static void SaveDinosaurs(List<Dinosaur> list)
+    {
+      var dinosaurs = list;
+
+      // Create a stream for writing information into a file
+      var fileWriter = new StreamWriter("dinosaurs.csv");
+      // Create an object that can write CSV to the fileWriter
+      var csvWriter = new CsvWriter(fileWriter, CultureInfo.InvariantCulture);
+      // Ask our csvWriter to write out our list of dinosaurs
+      csvWriter.WriteRecords(dinosaurs);
+      // Tell the file we are done
+      fileWriter.Close();
+    }
     static void Main(string[] args)
     {
-      var rightNow = DateTime.Now;
-
-      //Houses our dinosaurs
-      var dinosaurs = new List<Dinosaur> ()
-      {
-        new Dinosaur()
-          {
-            Name = "T-REX",
-            DietType = "Carnivore",
-            DateAcquired = rightNow.ToString(),
-            Weight = 200,
-            EnclosureNumber = 3
-          },
-
-        new Dinosaur()
-          {
-            Name = "RAPTOR",
-            DietType = "Carnivore",
-            DateAcquired = rightNow.ToString(),
-            Weight = 50,
-            EnclosureNumber = 10
-          },
-      
-        new Dinosaur()
-          {
-            Name = "LONG NECK",
-            DietType = "Herbivore",
-            DateAcquired = rightNow.ToString(),
-            Weight = 2300,
-            EnclosureNumber = 2
-          },
-        
-        new Dinosaur()
-          {
-            Name = "LONG NECK",
-            DietType = "Herbivore",
-            DateAcquired = rightNow.ToString(),
-            Weight = 500,
-            EnclosureNumber = 3
-          },
-
-        new Dinosaur()
-          {
-            Name = "LONG NECK",
-            DietType = "Herbivore",
-            DateAcquired = rightNow.ToString(),
-            Weight = 750,
-            EnclosureNumber = 7
-          },
-      };
+      var dinosaurs = new List<Dinosaur>();
+      dinosaurs = LoadDinosaurs(dinosaurs);
 
       Console.WriteLine("\n  🦕 Welcome to my dinosaur zoo! 🦖");
       Console.WriteLine("What would you like to do during your visit?");
@@ -460,6 +473,7 @@ namespace JurassicPark
             //Sends list of dinosaurs to check for repeat names, and also processes the user input for dino information, then adds it to the list if everything works out
             var dinosaur = AddDinosaur("\nWhat is the new dinosaur's name? ", dinosaurs);
             dinosaurs.Add(dinosaur);
+            SaveDinosaurs(dinosaurs);
             break;
 
           //Remove
@@ -467,12 +481,14 @@ namespace JurassicPark
             //Sends list of dinosaurs to then search and complete in remove method and return a dinosaur to be removed if necessary.
             var foundDinosaur = RemoveDinosaur("\nPlease type in the name of the dinosaur you are looking for: ", dinosaurs);
             dinosaurs.Remove(foundDinosaur);
+            SaveDinosaurs(dinosaurs);
             break;
 
           //Transfer
           case "T":
             //Sends list to search for a dinosaur and returns said dinosaur for transfer, then asks user where to transfer to
             foundDinosaur = TransferDinosaur("\nWhich dinosaur do you want to transfer? ", dinosaurs);
+            SaveDinosaurs(dinosaurs);
             break;
 
           //Summary
